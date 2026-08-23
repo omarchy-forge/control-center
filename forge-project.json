@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "projectType": "plugin",
+  "tagline": "Monitor and control your user-owned processes.",
+  "previewPath": "assets/preview.png",
+  "compatibility": ["omarchy-4"],
+  "featured": true,
+  "order": 30
+}
