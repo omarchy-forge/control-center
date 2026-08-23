@@ -10,6 +10,7 @@ Column {
   Text {
     width: parent.width
     text: "Could not load data"
+    textFormat: Text.PlainText
     color: Color.urgent
     font.family: parent.fontFamily
     font.pixelSize: Style.font.subtitle
@@ -18,6 +19,7 @@ Column {
   Text {
     width: parent.width
     text: parent.message
+    textFormat: Text.PlainText
     color: parent.foreground
     font.family: parent.fontFamily
     font.pixelSize: Style.font.body

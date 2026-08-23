@@ -5,21 +5,29 @@
   "version": "0.1.0",
   "author": "eddieor",
   "license": "MIT",
-  "description": "monitor loca development projects",
+  "description": "Start, stop, restart, and watch logs for one local project's dev services.",
   "kinds": ["bar-widget"],
   "entryPoints": {
     "barWidget": "Panel.qml"
   },
   "barWidget": {
     "displayName": "Omaforge Local Control Center",
-    "description": "monitor loca development projects",
+    "description": "Monitor and control local development processes (dev servers, workers) for a project, defined by .omaforge/services.json in the project directory.",
     "category": "Development",
-    "allowMultiple": false,
+    "allowMultiple": true,
     "defaultSection": "right",
     "defaults": {
+      "projectPath": "",
       "refreshIntervalSec": 60
     },
     "schema": [
+      {
+        "key": "projectPath",
+        "type": "path",
+        "label": "Project directory",
+        "defaultValue": "",
+        "description": "A local git project containing .omaforge/services.json. Add another instance of this widget for each project you want to monitor."
+      },
       {
         "key": "refreshIntervalSec",
         "type": "integer",

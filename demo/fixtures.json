@@ -1,5 +1,20 @@
 {
-  "ready": "2026-08-22T12:00:00-04:00",
-  "empty": null,
-  "error": "Fictional demo error"
+  "_comment": "Reference only — demo/run just prints this path. The actual deterministic fictional values live in services/ProjectService.qml's applyDemoState(), which this file mirrors for human review.",
+  "ready": {
+    "project": "demo-project",
+    "branch": "main",
+    "path": "~/code/demo-project",
+    "services": [
+      { "id": "web", "name": "Web", "command": ["pnpm", "dev"], "url": "http://localhost:3000", "status": "running" },
+      { "id": "api", "name": "API", "command": ["uv", "run", "fastapi", "dev"], "url": "http://localhost:8000", "status": "running" },
+      { "id": "worker", "name": "Worker", "command": ["pnpm", "worker"], "url": "", "status": "stopped" }
+    ]
+  },
+  "empty": {
+    "project": "demo-project",
+    "branch": "main",
+    "path": "~/code/demo-project",
+    "services": []
+  },
+  "error": "Could not open \"~/code/demo-project\" as a git repository. (Fictional demo error.)"
 }
