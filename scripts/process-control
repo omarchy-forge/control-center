@@ -18,6 +18,11 @@ protected_name() {
 
 case "$action" in
   list)
+    ports=""
+    if command -v ss >/dev/null 2>&1; then
+      ports=$(ss -H -ltnp 2>/dev/null | sed -n 's/.*pid=\([0-9][0-9]*\).*/\1/p' | sort -u | paste -sd, -)
+    fi
+    printf '@ports %s\n' "$ports"
     ps -ww -u "$uid" --no-headers -o pid= -o stat= -o comm= -o args=
     ;;
   stop)

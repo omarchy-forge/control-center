@@ -18,6 +18,8 @@ orange accent, detail console, and keyboard footer.
 
 - Enumerate the current UID's processes with a fixed array-form `ps` command.
 - Show PID, process name, state, and displayed command line.
+- Provide All, Apps, System, Servers, and Ports filters. Derive Ports from
+  read-only listening-socket metadata correlated to current-UID PIDs.
 - Refresh explicitly and every 5–300 seconds (default 10).
 - Stop sends `SIGTERM` only after verifying current-UID ownership.
 - Restart snapshots the NUL-delimited argv and working directory from `/proc`,

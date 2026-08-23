@@ -38,12 +38,21 @@ Item {
     demoState = next; demoTimer.restart(); return "ok"
   }
   function parse(text) {
-    var rows = String(text || "").split("\n"), out = []
+    var rows = String(text || "").split("\n"), out = [], portPids = ({})
     for (var i = 0; i < rows.length; i++) {
+      if (rows[i].indexOf("@ports ") === 0) {
+        var portList = rows[i].substr(7).split(",")
+        for (var p = 0; p < portList.length; p++) if (/^\d+$/.test(portList[p])) portPids[portList[p]] = true
+        continue
+      }
       var match = rows[i].match(/^\s*(\d+)\s+(\S+)\s+(\S+)\s*(.*)$/)
       if (!match) continue
       var protectedProcess = /^(quickshell|Hyprland|systemd|dbus-broker|uwsm|process-control)$/.test(match[3])
-      out.push({ id: match[1], pid: match[1], name: match[3], command: [match[4] || match[3]], cwd: "", url: "", demoStatus: "running", protectedProcess: protectedProcess, processState: match[2] })
+      var commandText = match[4] || match[3]
+      var listening = portPids[match[1]] === true
+      var server = listening || /(^|[\s\/])(node|deno|bun|python|ruby|php|java|go)([\s\/]|$)|server|serve|dev|worker/i.test(commandText)
+      var system = protectedProcess || /d$/.test(match[3]) || /^(pipewire|wireplumber|xdg-|gpg-agent|ssh-agent)/.test(match[3])
+      out.push({ id: match[1], pid: match[1], name: match[3], command: [commandText], cwd: "", url: "", demoStatus: "running", protectedProcess: protectedProcess, processState: match[2], listening: listening, server: server, systemProcess: system })
     }
     services = out; status = out.length ? "ready" : "empty"; emptyReason = "no-processes"; lastRefreshMs = Date.now()
   }
@@ -51,9 +60,9 @@ Item {
     if (demoState === "error") { status = "error"; lastError = "Could not read the current user's process table. (Fictional demo error.)"; services = []; return }
     if (demoState === "empty") { status = "empty"; services = []; return }
     services = [
-      {id:"4210",pid:"4210",name:"node",command:["node server.js"],url:"",demoStatus:"running",protectedProcess:false,processState:"Sl"},
-      {id:"4388",pid:"4388",name:"python",command:["python worker.py"],url:"",demoStatus:"running",protectedProcess:false,processState:"S"},
-      {id:"328014",pid:"328014",name:"quickshell",command:["quickshell shell session"],url:"",demoStatus:"running",protectedProcess:true,processState:"Sl"}
+      {id:"4210",pid:"4210",name:"node",command:["node server.js"],url:"",demoStatus:"running",protectedProcess:false,processState:"Sl",listening:true,server:true,systemProcess:false},
+      {id:"4388",pid:"4388",name:"python",command:["python worker.py"],url:"",demoStatus:"running",protectedProcess:false,processState:"S",listening:false,server:true,systemProcess:false},
+      {id:"328014",pid:"328014",name:"quickshell",command:["quickshell shell session"],url:"",demoStatus:"running",protectedProcess:true,processState:"Sl",listening:false,server:false,systemProcess:true}
     ]; status = "ready"
   }
   function demoLogsFor(id) { var s = services.find(function(x){return x.id===id}); return s ? [{text:"PID " + s.pid + " · state " + s.processState,stream:"out"},{text:s.command[0],stream:"out"}] : [] }

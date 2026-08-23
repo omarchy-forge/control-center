@@ -10,7 +10,7 @@ bash -n "$repo_root/tests/runtime"
 for required in \
   'references/omaforge-final-logo-300-app-icon.png' \
   'text: "Forge Run"' \
-  'text: "SERVICES"' \
+  'text: "PROCESSES"' \
   'brandOrange' \
   'brandCyan'; do
   grep -Fq "$required" "$repo_root/Panel.qml" || {
@@ -18,6 +18,22 @@ for required in \
     exit 1
   }
 done
+
+for filter in 'label: "All"' 'label: "Apps"' 'label: "System"' 'label: "Servers"' 'label: "Ports"'; do
+  grep -Fq "$filter" "$repo_root/Panel.qml" || { echo "missing process filter: $filter" >&2; exit 1; }
+done
+
+if command -v qmllint >/dev/null 2>&1; then
+  lint_output=$(qmllint "$repo_root/Panel.qml" 2>&1 || true)
+elif [[ -x /usr/lib/qt6/bin/qmllint ]]; then
+  lint_output=$(/usr/lib/qt6/bin/qmllint "$repo_root/Panel.qml" 2>&1 || true)
+else
+  lint_output=""
+fi
+if grep -Fq "Syntax error" <<<"$lint_output"; then
+  printf '%s\n' "$lint_output" >&2
+  exit 1
+fi
 
 if command -v omarchy >/dev/null 2>&1; then
   omarchy plugin validate "$repo_root"

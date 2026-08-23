@@ -23,7 +23,7 @@ CursorSurface {
     : root.procState === "error" ? Color.urgent
     : Qt.darker(root.foreground, 1.7)
   readonly property string statusText: root.procState === "running"
-    ? (root.service && root.service.url !== "" ? root.service.url : "running")
+    ? (root.service && root.service.listening ? "listening" : "running")
     : root.procState === "error" ? "error"
     : "stopped"
 

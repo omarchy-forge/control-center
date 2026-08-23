@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add All, Apps, System, Servers, and Ports filters above the process list;
+  Ports correlates listening TCP sockets with user-owned PIDs via read-only
+  `ss` output and requires no sudo.
 - Replace the mistaken per-project service model with a dashboard of all
   processes owned by the current user, including graceful Stop and best-effort
   Restart controls without sudo and protection for session-critical processes.

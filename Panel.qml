@@ -23,8 +23,10 @@ Panel {
   property string focusPane: "services" // services | logs
   property int selectedIndex: 0
   property bool cursorActive: false
+  property string processFilter: "all"
 
-  readonly property var services: projectService.services
+  readonly property var allServices: projectService.services
+  readonly property var services: filteredServices()
   readonly property bool isDemo: projectService.demoState !== ""
 
   implicitWidth: button.implicitWidth
@@ -32,6 +34,25 @@ Panel {
 
   function refresh() { projectService.refresh() }
   function setDemoState(state) { return projectService.setDemoState(state) }
+
+  function filteredServices() {
+    var out = []
+    for (var i = 0; i < allServices.length; i++) {
+      var process = allServices[i]
+      if (processFilter === "all"
+          || (processFilter === "system" && process.systemProcess)
+          || (processFilter === "servers" && process.server)
+          || (processFilter === "ports" && process.listening)
+          || (processFilter === "apps" && !process.systemProcess && !process.server)) out.push(process)
+    }
+    return out
+  }
+
+  function setProcessFilter(nextFilter) {
+    processFilter = nextFilter
+    selectedIndex = 0
+    cursorActive = false
+  }
 
   function idsOf(list) {
     var out = []
@@ -252,7 +273,7 @@ Panel {
 
           Text {
             visible: projectService.status === "ready"
-            text: root.runningCount() + " running  ●"
+            text: root.services.length + "/" + root.allServices.length + " shown  ●"
             color: root.foreground
             font.family: root.fontFamily
             font.pixelSize: Style.font.body
@@ -371,9 +392,35 @@ Panel {
           }
 
           PanelSectionHeader {
-            text: "SERVICES"
+            text: "PROCESSES"
             foreground: root.foreground
             fontFamily: root.fontFamily
+          }
+
+          RowLayout {
+            width: parent.width
+            spacing: Style.space(4)
+
+            Repeater {
+              model: [
+                {key: "all", label: "All"},
+                {key: "apps", label: "Apps"},
+                {key: "system", label: "System"},
+                {key: "servers", label: "Servers"},
+                {key: "ports", label: "Ports"}
+              ]
+              Button {
+                required property var modelData
+                text: modelData.label
+                foreground: root.foreground
+                fontFamily: root.fontFamily
+                bordered: true
+                selected: root.processFilter === modelData.key
+                accent: root.brandOrange
+                Layout.fillWidth: true
+                onClicked: root.setProcessFilter(modelData.key)
+              }
+            }
           }
 
           Column {
