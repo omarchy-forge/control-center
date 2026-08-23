@@ -60,6 +60,31 @@ Item {
 
   Timer { interval: root.refreshIntervalSec*1000; repeat: true; running: true; triggeredOnStart: true; onTriggered: root.refresh() }
   Timer { id: demoTimer; interval: 100; onTriggered: root.applyDemo() }
-  Process { id: listProcess; running:false; command:[]; stdout: StdioCollector{id:listOut;waitForEnd:true}; stderr:StdioCollector{waitForEnd:true}; onExited:function(code){ if(code===0) root.parse(listOut.text); else {root.status="error";root.lastError="Could not read the current user's process table."} } }
-  Process { id: controlProcess; running:false; command:[]; stdout:StdioCollector{waitForEnd:true}; stderr:StdioCollector{id:controlErr;waitForEnd:true}; onExited:function(code){ root.refreshWarning=code===0?"":String(controlErr.text||"Process action failed.").trim(); root.refresh() } }
+  Process {
+    id: listProcess
+    running: false
+    command: []
+    stdout: StdioCollector { id: listOut; waitForEnd: true }
+    stderr: StdioCollector { waitForEnd: true }
+    onExited: function(code) {
+      if (code === 0) {
+        root.parse(listOut.text)
+      } else {
+        root.status = "error"
+        root.lastError = "Could not read the current user's process table."
+      }
+    }
+  }
+
+  Process {
+    id: controlProcess
+    running: false
+    command: []
+    stdout: StdioCollector { waitForEnd: true }
+    stderr: StdioCollector { id: controlErr; waitForEnd: true }
+    onExited: function(code) {
+      root.refreshWarning = code === 0 ? "" : String(controlErr.text || "Process action failed.").trim()
+      root.refresh()
+    }
+  }
 }
