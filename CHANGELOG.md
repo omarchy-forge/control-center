@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Reworked the bar icon and ready-state popout to match the confirmed visual
+  design, including the supplied Forge mark, branded header, project card,
+  paired actions, framed services, selected-row accent, cyan URLs, log console,
+  and keyboard footer.
 - Initial Forge-generated plugin foundation.
 - Implemented the full local dev-process control center described in
   `FORGE_SPEC.md`: per-project service list read from

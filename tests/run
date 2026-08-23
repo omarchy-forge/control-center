@@ -7,6 +7,18 @@ jq -e . "$repo_root/manifest.json" >/dev/null
 bash -n "$repo_root/demo/run"
 bash -n "$repo_root/tests/runtime"
 
+for required in \
+  'references/omaforge-final-logo-300-app-icon.png' \
+  'text: "Forge Run"' \
+  'text: "SERVICES"' \
+  'brandOrange' \
+  'brandCyan'; do
+  grep -Fq "$required" "$repo_root/Panel.qml" || {
+    echo "Panel.qml is missing visual-fidelity contract: $required" >&2
+    exit 1
+  }
+done
+
 if command -v omarchy >/dev/null 2>&1; then
   omarchy plugin validate "$repo_root"
 else

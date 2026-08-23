@@ -15,6 +15,9 @@ Panel {
 
   readonly property color foreground: bar ? bar.foreground : Color.foreground
   readonly property string fontFamily: bar ? bar.fontFamily : Style.font.family
+  readonly property color brandOrange: "#ff5a00"
+  readonly property color brandCyan: "#52e7f0"
+  readonly property url brandIcon: Qt.resolvedUrl("references/omaforge-final-logo-300-app-icon.png")
   property Item forgeScreenshotTarget: content
 
   property string focusPane: "services" // services | logs
@@ -175,7 +178,14 @@ Panel {
     id: button
     anchors.fill: parent
     bar: root.bar
-    text: "󰔟"
+    iconComponent: Component {
+      Image {
+        source: root.brandIcon
+        fillMode: Image.PreserveAspectFit
+        smooth: true
+        mipmap: true
+      }
+    }
     active: root.opened
     tooltipText: projectService.loading
       ? "Refreshing Omaforge Local Control Center"
@@ -197,8 +207,8 @@ Panel {
     bar: root.bar
     open: root.opened
     focusTarget: keyCatcher
-    contentWidth: popout.fittedContentWidth(Style.space(380))
-    contentHeight: popout.fittedContentHeight(content.implicitHeight, Style.space(620))
+    contentWidth: popout.fittedContentWidth(Style.space(500))
+    contentHeight: popout.fittedContentHeight(content.implicitHeight, Style.space(720))
 
     PanelKeyCatcher {
       id: keyCatcher
@@ -232,38 +242,81 @@ Panel {
         width: panelFlick.width
         spacing: Style.space(12)
 
-        PanelHero {
+        RowLayout {
           width: parent.width
-          title: projectService.displayProjectName !== "" ? projectService.displayProjectName : "Omaforge Local Control Center"
-          meta: projectService.status === "error" ? "Needs attention"
-            : projectService.status === "empty" ? "No services"
-            : projectService.status === "loading" ? "Loading"
-            : "Updated locally"
-          detail: projectService.status === "ready" ? (root.runningCount() + " running") : ""
-          foreground: root.foreground
-          fontFamily: root.fontFamily
-          iconComponent: Component {
-            Text {
-              text: "󰔟"
-              color: root.foreground
-              font.family: root.fontFamily
-              font.pixelSize: Style.font.display
-            }
+          spacing: Style.space(12)
+
+          Image {
+            source: root.brandIcon
+            Layout.preferredWidth: Style.space(42)
+            Layout.preferredHeight: Style.space(42)
+            fillMode: Image.PreserveAspectFit
+            smooth: true
+            mipmap: true
+          }
+
+          Text {
+            text: "Forge Run"
+            color: root.foreground
+            font.family: root.fontFamily
+            font.pixelSize: Style.font.title
+            font.bold: true
+            Layout.fillWidth: true
+          }
+
+          Text {
+            visible: projectService.status === "ready"
+            text: root.runningCount() + " running  ●"
+            color: root.foreground
+            font.family: root.fontFamily
+            font.pixelSize: Style.font.body
+          }
+
+          Text {
+            text: "×"
+            color: root.foreground
+            font.family: root.fontFamily
+            font.pixelSize: Style.font.display
+            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: root.close() }
           }
         }
 
-        Text {
+        Rectangle {
           visible: projectService.displayPath !== "" && (projectService.status === "ready" || projectService.status === "empty")
           width: parent.width
-          text: "⎇ " + (projectService.branchKnown || root.isDemo ? projectService.branch : "unknown") + "  ·  " + projectService.displayPath
-          textFormat: Text.PlainText
-          color: Qt.darker(root.foreground, 1.45)
-          font.family: root.fontFamily
-          font.pixelSize: Style.font.caption
-          elide: Text.ElideRight
-        }
+          height: projectIdentity.implicitHeight + Style.space(20)
+          radius: Style.cornerRadius
+          color: Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.025)
+          border.width: Style.normalBorderWidth
+          border.color: Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.24)
 
-        PanelSeparator { foreground: root.foreground }
+          Column {
+            id: projectIdentity
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.margins: Style.space(12)
+            spacing: Style.space(4)
+
+            Text {
+              width: parent.width
+              text: projectService.displayProjectName
+              color: root.foreground
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.subtitle
+              font.bold: true
+              elide: Text.ElideRight
+            }
+            Text {
+              width: parent.width
+              text: (projectService.branchKnown || root.isDemo ? projectService.branch : "unknown") + "  ●  " + projectService.displayPath
+              color: Qt.darker(root.foreground, 1.35)
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.caption
+              elide: Text.ElideMiddle
+            }
+          }
+        }
 
         LoadingState {
           visible: projectService.status === "loading"
@@ -309,27 +362,38 @@ Panel {
             spacing: Style.space(8)
 
             Button {
-              text: "Run all"
+              text: "▶  Run all"
               foreground: root.foreground
               fontFamily: root.fontFamily
               bordered: true
+              accent: root.brandOrange
+              active: true
+              Layout.fillWidth: true
               enabled: !root.isDemo
               onClicked: root.runAllServices()
             }
             Button {
-              text: "Stop all"
+              text: "■  Stop all"
               foreground: root.foreground
               fontFamily: root.fontFamily
               bordered: true
+              accent: root.brandOrange
+              Layout.fillWidth: true
               enabled: !root.isDemo
               onClicked: root.stopAllServices()
             }
           }
 
+          PanelSectionHeader {
+            text: "SERVICES"
+            foreground: root.foreground
+            fontFamily: root.fontFamily
+          }
+
           Column {
             id: servicesColumn
             width: parent.width
-            spacing: Style.space(4)
+            spacing: 0
 
             Repeater {
               model: root.services
@@ -344,6 +408,8 @@ Panel {
                 interactive: !root.isDemo
                 foreground: root.foreground
                 fontFamily: root.fontFamily
+                accent: root.brandOrange
+                linkColor: root.brandCyan
                 onSelectRequested: root.selectIndex(index)
                 onStartRequested: { root.selectIndex(index); pool.start(modelData.id, modelData.command, modelData.cwd) }
                 onRestartRequested: { root.selectIndex(index); pool.restart(modelData.id, modelData.command, modelData.cwd) }

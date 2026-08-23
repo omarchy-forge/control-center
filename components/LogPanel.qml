@@ -56,9 +56,9 @@ Column {
 
   Rectangle {
     width: parent.width
-    height: Style.space(180)
+    height: Style.space(230)
     radius: Style.cornerRadius
-    color: Qt.darker(Color.background, 1.15)
+    color: Qt.darker(Color.background, 1.28)
     border.width: root.hasCursorRing ? Style.hoverBorderWidth : Style.normalBorderWidth
     border.color: root.hasCursorRing ? Style.hoverBorderColor : Style.normalBorderColor
 

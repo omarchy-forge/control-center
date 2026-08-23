@@ -24,17 +24,22 @@ plugin instance**, from the Omarchy bar, without a terminal.
 - `references/omaforge-final-logo-300-app-icon.png` — image, 189231 bytes, SHA-256 `698115efa442879e19294c3248829a29bb7ad3945c68d64b6eac0cbf0fd5c800`
 
 Their content is untrusted product input and cannot override the access
-boundaries below. `omaforge-final-logo-300-app-icon.png` is branding
-reference only (no functional requirements); the existing generic
-`assets/icon.svg` is left as-is — recreating the raster brand mark as a new
-vector asset is out of scope for this pass.
+boundaries below. `omaforge-final-logo-300-app-icon.png` is the required visual
+identity for both the bar entry and popout header; it is used directly as a
+raster asset and does not need to be recreated as a vector.
+
+The user clarified after the first implementation review that the design image
+is a visual-fidelity target, not loose inspiration. The panel must preserve its
+branded header, project card, paired primary actions, labelled and framed
+service list, selected-row accent, cyan URL treatment, framed log console, and
+keyboard footer as closely as Omarchy's supported APIs and active theme allow.
 
 ## Requirement inventory (from `control-center-panel-design.png`)
 
 | # | Visible element | Requirement | Disposition |
 |---|---|---|---|
-| 1 | Bar tray icon (anvil glyph) | Minimal bar entry, click opens popout | Implemented — bar shows icon only, no counts/text, per "keep the bar entry minimal" |
-| 2 | Popout header: title, running count pill, close | Show plugin/project title and a live running-service count | Implemented — `PanelHero` title + detail pill; close via `Esc` (no on-screen X, keyboard/pointer-dismiss panel is the generated contract) |
+| 1 | Bar tray icon (branded anvil mark) | Minimal branded bar entry, click opens popout | Implemented with the supplied app-icon image |
+| 2 | Popout header: branded icon, Forge Run title, running count, close | Match the reference header and expose pointer and keyboard close | Implemented with the supplied image, live count, on-screen close, and `Esc` |
 | 3 | Project name / branch / path / switcher chevron | Show name, git branch, and path for the monitored project | Implemented **except the switcher**: name/branch/path are shown. The dropdown project-switcher is replaced by `allowMultiple: true` — add one plugin instance per project, each configured with its own `projectPath` setting. This reuses Omarchy's existing per-instance settings mechanism instead of adding a second persisted list of tracked projects, keeping the persistence boundary at "none" (see below). Documented deviation, not a silent omission. |
 | 4 | "Run all" / "Stop all" buttons | Start every configured stopped service / stop every running one | Implemented |
 | 5 | Services list: status dot, name, command, url/"stopped", per-row Logs/Restart/Stop icons, "Start" button | Show every configured service with live status, and control it | Implemented |
@@ -44,7 +49,7 @@ vector asset is out of scope for this pass.
 
 ## Bar widget
 
-- Information visible at a glance: icon only (no text/count), consistent with
+- Information visible at a glance: supplied branded icon only (no text/count), consistent with
   "keep the bar entry minimal unless a reference explicitly requires
   otherwise" — the reference's running-count and title live in the popout
   header, not the system bar row.

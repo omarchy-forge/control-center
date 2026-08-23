@@ -17,6 +17,7 @@ CursorSurface {
   property bool selected: false
   property bool interactive: true
   property string fontFamily: Style.font.family
+  property color linkColor: Color.accent
 
   readonly property color dotColor: root.procState === "running" ? Color.accent
     : root.procState === "error" ? Color.urgent
@@ -32,7 +33,25 @@ CursorSurface {
   signal restartRequested()
 
   current: root.selected
-  implicitHeight: contentRow.implicitHeight + Style.spacing.rowPaddingX
+  implicitHeight: Math.max(Style.space(54), contentRow.implicitHeight + Style.spacing.rowPaddingX)
+  radius: 0
+  fill: root.selected ? Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.055) : "transparent"
+
+  Rectangle {
+    anchors.fill: parent
+    color: "transparent"
+    border.width: Style.normalBorderWidth
+    border.color: Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.22)
+  }
+
+  Rectangle {
+    visible: root.selected
+    anchors.left: parent.left
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    width: Style.space(3)
+    color: root.accent
+  }
 
   MouseArea {
     anchors.fill: parent
@@ -87,7 +106,8 @@ CursorSurface {
     Text {
       text: root.statusText
       textFormat: Text.PlainText
-      color: root.procState === "error" ? Color.urgent : Qt.darker(root.foreground, 1.2)
+      color: root.procState === "running" && root.service && root.service.url !== "" ? root.linkColor
+        : root.procState === "error" ? Color.urgent : Qt.darker(root.foreground, 1.2)
       font.family: root.fontFamily
       font.pixelSize: Style.font.bodySmall
       elide: Text.ElideRight
@@ -96,7 +116,7 @@ CursorSurface {
     }
 
     RowLayout {
-      visible: root.interactive
+      visible: true
       spacing: Style.space(4)
       Layout.alignment: Qt.AlignVCenter
 
@@ -106,7 +126,20 @@ CursorSurface {
         foreground: root.foreground
         fontFamily: root.fontFamily
         bordered: true
+        accent: root.accent
+        enabled: root.interactive
         onClicked: root.startRequested()
+      }
+
+      PanelActionButton {
+        visible: root.procState === "running"
+        iconText: "▤"
+        tooltipText: "Show logs"
+        foreground: root.foreground
+        fontFamily: root.fontFamily
+        bordered: true
+        enabled: root.interactive
+        onClicked: root.selectRequested()
       }
 
       PanelActionButton {
@@ -115,6 +148,8 @@ CursorSurface {
         tooltipText: "Restart"
         foreground: root.foreground
         fontFamily: root.fontFamily
+        bordered: true
+        enabled: root.interactive
         onClicked: root.restartRequested()
       }
 
@@ -125,6 +160,8 @@ CursorSurface {
         foreground: root.foreground
         fontFamily: root.fontFamily
         hoverColor: Color.urgent
+        bordered: true
+        enabled: root.interactive
         onClicked: root.stopRequested()
       }
     }

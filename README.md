@@ -22,6 +22,10 @@ to the confirmed product reference.
 - Full keyboard operation (see "Usage" below) with a visible focus state.
 - Loading, ready, empty, and error states, including deterministic fictional
   demo states.
+- Uses the supplied Forge app icon and closely follows the confirmed control
+  center mockup's header, project card, paired actions, service rows, log
+  console, color roles, and keyboard footer while retaining Omarchy theme
+  tokens for readability across themes.
 
 ## One plugin instance per project
 
