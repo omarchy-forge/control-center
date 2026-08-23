@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+state="${1:-ready}"
+case "$state" in
+  ready|empty|error) ;;
+  *) echo "Usage: ./demo/run [ready|empty|error]" >&2; exit 2 ;;
+esac
+
+command -v omarchy-shell >/dev/null 2>&1 || {
+  echo "omarchy-shell is required to run the installed plugin demo" >&2
+  exit 1
+}
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+printf 'Fictional demo state: %s\n' "$state"
+printf 'Fixture: %s\n' "$repo_root/demo/fixtures.json"
+printf '\nOpening the installed plugin and applying its in-memory demo state...\n'
+if ! open_result="$(omarchy-shell "omaforge.control.center" open 2>&1)"; then
+  printf 'Could not open the installed plugin (%s). Install and enable it first; for pre-install testing use ./tests/runtime --trust-plugin-code --state %s.\n' "$open_result" "$state" >&2
+  exit 1
+fi
+if ! result="$(omarchy-shell "omaforge.control.center" setDemoState "$state" 2>&1)"; then
+  printf 'Could not apply demo state (shell returned %s). Is the plugin installed and enabled?\n' "$result" >&2
+  exit 1
+fi
+if [[ "$result" != "ok" ]]; then
+  printf 'Could not apply demo state (shell returned %s). Is the plugin installed and enabled?\n' "$result" >&2
+  exit 1
+fi
+printf 'Applied %s without changing shell configuration.\n' "$state"

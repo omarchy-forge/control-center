@@ -1,0 +1,129 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ ${1:-} != "--trust-plugin-code" ]]; then
+  echo "Usage: ./tests/runtime --trust-plugin-code [--state ready|empty|error]" >&2
+  echo "This test executes the plugin's QML and local commands. Review the code first." >&2
+  exit 2
+fi
+
+state=""
+screenshot=""
+shift
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --state) state="${2:-}"; shift 2 ;;
+    --screenshot) screenshot="${2:-}"; shift 2 ;;
+    *) echo "unexpected runtime argument: $1" >&2; exit 2 ;;
+  esac
+done
+case "$state" in
+  ""|ready|empty|error) ;;
+  *) echo "runtime state must be ready, empty, or error" >&2; exit 2 ;;
+esac
+if [[ -n "$screenshot" ]]; then
+  [[ "$state" != "" && "$screenshot" = /* && "$screenshot" == *.png ]] || {
+    echo "screenshot requires a state and an absolute .png output" >&2; exit 2;
+  }
+  [[ ! -e "$screenshot" ]] || { echo "screenshot output already exists" >&2; exit 2; }
+fi
+
+for command in jq quickshell setsid timeout; do
+  command -v "$command" >/dev/null 2>&1 || {
+    echo "runtime test requires $command" >&2
+    exit 1
+  }
+done
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+omarchy_root="${OMARCHY_PATH:-/usr/share/omarchy}"
+for module in Commons Ui; do
+  test -d "$omarchy_root/shell/$module" || {
+    echo "runtime test requires $omarchy_root/shell/$module" >&2
+    exit 1
+  }
+done
+
+entry_point="$(jq -er '.entryPoints.barWidget' "$repo_root/manifest.json")"
+case "$entry_point" in
+  ""|/*|*..*|*$'\n'*) echo "unsafe bar-widget entry point: $entry_point" >&2; exit 1 ;;
+esac
+test -f "$repo_root/$entry_point" || {
+  echo "bar-widget entry point does not exist: $entry_point" >&2
+  exit 1
+}
+test "$entry_point" = "Panel.qml" || {
+  echo "runtime harness expects the generated bar-widget entry point Panel.qml" >&2
+  exit 1
+}
+
+if command -v omarchy >/dev/null 2>&1; then
+  omarchy plugin validate "$repo_root" >/dev/null
+fi
+
+session_runtime="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+wayland_display="${WAYLAND_DISPLAY:-wayland-1}"
+test -S "$session_runtime/$wayland_display" || {
+  echo "runtime test requires an active Wayland session" >&2
+  exit 1
+}
+
+runtime_root="$(mktemp -d "${TMPDIR:-/tmp}/omaforge-runtime.XXXXXX")"
+cleanup() {
+  if [[ -n ${runtime_pid:-} ]]; then
+    kill -- "-$runtime_pid" 2>/dev/null || true
+    wait "$runtime_pid" 2>/dev/null || true
+  fi
+  find "$runtime_root" -depth -delete 2>/dev/null || true
+}
+trap cleanup EXIT INT TERM
+
+mkdir -p "$runtime_root/config" "$runtime_root/home" "$runtime_root/data" "$runtime_root/cache" "$runtime_root/runtime"
+chmod 700 "$runtime_root/runtime"
+ln -s "$session_runtime/$wayland_display" "$runtime_root/runtime/$wayland_display"
+mkdir "$runtime_root/config/Plugin"
+while IFS= read -r -d '' source; do
+  cp -a -- "$source" "$runtime_root/config/Plugin/"
+done < <(find "$repo_root" -mindepth 1 -maxdepth 1 ! -name .git -print0)
+ln -s "$omarchy_root/shell/Commons" "$runtime_root/config/Commons"
+ln -s "$omarchy_root/shell/Ui" "$runtime_root/config/Ui"
+
+cp "$repo_root/tests/runtime-shell.qml" "$runtime_root/config/shell.qml"
+
+output_file="$runtime_root/output.log"
+HOME="$runtime_root/home" \
+XDG_CONFIG_HOME="$runtime_root/config-home" \
+XDG_DATA_HOME="$runtime_root/data" \
+XDG_CACHE_HOME="$runtime_root/cache" \
+XDG_RUNTIME_DIR="$runtime_root/runtime" \
+WAYLAND_DISPLAY="$wayland_display" \
+OMAFORGE_DEV_STATE="$state" \
+OMAFORGE_SCREENSHOT_PATH="$screenshot" \
+NO_COLOR=1 \
+setsid timeout 12 quickshell --no-color --path "$runtime_root/config/shell.qml" >"$output_file" 2>&1 &
+runtime_pid=$!
+
+for _ in {1..100}; do
+  if grep -qF "OMAFORGE_RUNTIME_PASS" "$output_file" 2>/dev/null; then
+    kill -- "-$runtime_pid" 2>/dev/null || true
+    wait "$runtime_pid" 2>/dev/null || true
+    runtime_pid=""
+    if [[ -n "$screenshot" ]]; then
+      test -s "$screenshot" || { echo "runtime did not create screenshot" >&2; exit 1; }
+      echo "isolated plugin screenshot passed: $state"
+    elif [[ -n "$state" ]]; then
+      echo "isolated Quickshell runtime state passed: $state"
+    else
+      echo "isolated Quickshell runtime test passed"
+    fi
+    exit 0
+  fi
+  if grep -qF "OMAFORGE_RUNTIME_FAIL" "$output_file" 2>/dev/null || ! kill -0 "$runtime_pid" 2>/dev/null; then
+    break
+  fi
+  sleep 0.1
+done
+
+echo "isolated Quickshell runtime test failed" >&2
+sed -n '1,200p' "$output_file" >&2
+exit 1

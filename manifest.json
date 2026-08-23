@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "id": "omaforge.control.center",
+  "name": "Omaforge Local Control Center",
+  "version": "0.1.0",
+  "author": "eddieor",
+  "license": "MIT",
+  "description": "monitor loca development projects",
+  "kinds": ["bar-widget"],
+  "entryPoints": {
+    "barWidget": "Panel.qml"
+  },
+  "barWidget": {
+    "displayName": "Omaforge Local Control Center",
+    "description": "monitor loca development projects",
+    "category": "Development",
+    "allowMultiple": false,
+    "defaultSection": "right",
+    "defaults": {
+      "refreshIntervalSec": 60
+    },
+    "schema": [
+      {
+        "key": "refreshIntervalSec",
+        "type": "integer",
+        "label": "Refresh interval (seconds)",
+        "min": 10,
+        "max": 3600,
+        "step": 10,
+        "defaultValue": 60
+      }
+    ]
+  }
+}
