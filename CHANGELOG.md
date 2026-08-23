@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add a deterministic plugin-only Process Center preview to the repository and
+  README without capturing desktop or real process data.
 - Rename the popout header from Forge Run to Process Center so its purpose is
   immediately clear without changing the plugin ID or registry name.
 - Add All, Apps, System, Servers, and Ports filters above the process list;

@@ -7,6 +7,8 @@ without `sudo`.
 The compact popout header is **Process Center**; the full plugin identity remains
 **Omaforge Local Control Center** in Omarchy's plugin registry.
 
+![Process Center ready-state preview](assets/preview.png)
+
 ## Behavior
 
 - Lists open processes owned by the current UID using `ps`.
@@ -69,8 +71,9 @@ After reviewing the code, exercise deterministic fictional states in isolation:
 omarchy plugin add "$PWD" --enable
 ```
 
-Preview image is not available yet; use the isolated screenshot command
-after reviewing the QML.
+The preview above is generated from the deterministic fictional ready state
+using Forge's plugin-only screenshot target; it does not capture the desktop or
+real process data.
 
 ## Update
 
