@@ -263,7 +263,7 @@ Panel {
           }
 
           Text {
-            text: "Forge Run"
+            text: "Process Center"
             color: root.foreground
             font.family: root.fontFamily
             font.pixelSize: Style.font.title

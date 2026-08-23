@@ -4,7 +4,7 @@ Specification status: Ready for implementation
 
 ## Product goal
 
-Provide a branded Omarchy dashboard that monitors all processes owned by the
+Provide a branded Omarchy dashboard titled **Process Center** that monitors all processes owned by the
 current user and offers unprivileged graceful Stop and best-effort Restart.
 
 ## Visual contract

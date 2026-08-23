@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Rename the popout header from Forge Run to Process Center so its purpose is
+  immediately clear without changing the plugin ID or registry name.
 - Add All, Apps, System, Servers, and Ports filters above the process list;
   Ports correlates listening TCP sockets with user-owned PIDs via read-only
   `ss` output and requires no sudo.

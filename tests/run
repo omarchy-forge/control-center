@@ -9,7 +9,7 @@ bash -n "$repo_root/tests/runtime"
 
 for required in \
   'references/omaforge-final-logo-300-app-icon.png' \
-  'text: "Forge Run"' \
+  'text: "Process Center"' \
   'text: "PROCESSES"' \
   'brandOrange' \
   'brandCyan'; do

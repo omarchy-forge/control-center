@@ -4,6 +4,9 @@ A local-first Omarchy bar widget for monitoring processes owned by the current
 user and gracefully stopping or best-effort restarting eligible processes
 without `sudo`.
 
+The compact popout header is **Process Center**; the full plugin identity remains
+**Omaforge Local Control Center** in Omarchy's plugin registry.
+
 ## Behavior
 
 - Lists open processes owned by the current UID using `ps`.
