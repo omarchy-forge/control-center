@@ -40,15 +40,13 @@ Panel {
   }
 
   function statusFor(service) {
-    if (!service) return "stopped"
-    if (root.isDemo) return service.demoStatus || "stopped"
-    return pool.stateFor(service.id)
+    return service ? (service.demoStatus || "running") : "stopped"
   }
 
   function logsFor(service) {
     if (!service) return []
     if (root.isDemo) return projectService.demoLogsFor(service.id)
-    return pool.logsFor(service.id)
+    return projectService.demoLogsFor(service.id)
   }
 
   function runningCount() {
@@ -57,7 +55,7 @@ Panel {
       for (var i = 0; i < services.length; i++) if ((services[i].demoStatus || "stopped") === "running") count++
       return count
     }
-    return pool.runningCount(idsOf(services))
+    return services.length
   }
 
   function selectedService() {
@@ -107,28 +105,20 @@ Panel {
   function restartSelected() {
     if (root.isDemo) return
     var svc = selectedService()
-    if (svc) pool.restart(svc.id, svc.command, svc.cwd)
+    if (svc && !svc.protectedProcess) projectService.control("restart", svc.pid)
   }
 
   function stopSelected() {
     if (root.isDemo) return
     var svc = selectedService()
-    if (svc) pool.stop(svc.id)
+    if (svc && !svc.protectedProcess) projectService.control("stop", svc.pid)
   }
 
-  function runAllServices() { if (!root.isDemo) pool.runAll(services) }
-  function stopAllServices() { if (!root.isDemo) pool.stopAll(idsOf(services)) }
+  function runAllServices() { root.refresh() }
+  function stopAllServices() { root.stopSelected() }
 
   function emptyMessage() {
-    if (projectService.emptyReason === "no-project") {
-      return "No project directory configured. Set this widget's \"Project directory\" setting to a local git project. Add another instance of this widget for each additional project you want to monitor."
-    }
-    var name = projectService.displayProjectName !== "" ? projectService.displayProjectName : "this project"
-    if (projectService.emptyReason === "invalid") {
-      return "Could not read " + projectService.configRelPath + " in " + name + ": " + projectService.configParseError
-    }
-    return "No " + projectService.configRelPath + " found in " + name + ". Create it to list the dev services you want to start, stop, and watch here, e.g.:\n"
-      + "{\"services\":[{\"id\":\"web\",\"name\":\"Web\",\"command\":[\"pnpm\",\"dev\"],\"url\":\"http://localhost:3000\"}]}"
+    return "No user-owned processes are currently visible."
   }
 
   onOpenedChanged: if (opened) {
@@ -142,10 +132,6 @@ Panel {
   ProjectService {
     id: projectService
     settings: root.settings
-  }
-
-  ProcessPool {
-    id: pool
   }
 
   Process {
@@ -362,7 +348,7 @@ Panel {
             spacing: Style.space(8)
 
             Button {
-              text: "▶  Run all"
+              text: "↻  Refresh"
               foreground: root.foreground
               fontFamily: root.fontFamily
               bordered: true
@@ -373,13 +359,13 @@ Panel {
               onClicked: root.runAllServices()
             }
             Button {
-              text: "■  Stop all"
+              text: "■  Stop selected"
               foreground: root.foreground
               fontFamily: root.fontFamily
               bordered: true
               accent: root.brandOrange
               Layout.fillWidth: true
-              enabled: !root.isDemo
+              enabled: !root.isDemo && root.selectedService() && !root.selectedService().protectedProcess
               onClicked: root.stopAllServices()
             }
           }
@@ -411,9 +397,9 @@ Panel {
                 accent: root.brandOrange
                 linkColor: root.brandCyan
                 onSelectRequested: root.selectIndex(index)
-                onStartRequested: { root.selectIndex(index); pool.start(modelData.id, modelData.command, modelData.cwd) }
-                onRestartRequested: { root.selectIndex(index); pool.restart(modelData.id, modelData.command, modelData.cwd) }
-                onStopRequested: { root.selectIndex(index); pool.stop(modelData.id) }
+                onStartRequested: { root.selectIndex(index); projectService.control("restart", modelData.pid) }
+                onRestartRequested: { root.selectIndex(index); projectService.control("restart", modelData.pid) }
+                onStopRequested: { root.selectIndex(index); projectService.control("stop", modelData.pid) }
               }
             }
           }
@@ -439,7 +425,7 @@ Panel {
             hasCursorRing: root.cursorActive && root.focusPane === "logs"
             foreground: root.foreground
             fontFamily: root.fontFamily
-            onClearRequested: if (!root.isDemo && root.selectedService()) pool.clearLogsFor(root.selectedService().id)
+            onClearRequested: {}
           }
         }
 

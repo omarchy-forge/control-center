@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+action=${1:-list}
+pid=${2:-}
+uid=$(id -u)
+
+owned_pid() {
+  [[ $pid =~ ^[1-9][0-9]*$ && -d /proc/$pid ]] || return 1
+  [[ $(stat -c %u "/proc/$pid") == "$uid" ]]
+}
+
+protected_name() {
+  local name
+  name=$(<"/proc/$pid/comm")
+  [[ $name =~ ^(quickshell|Hyprland|systemd|dbus-broker|uwsm|process-control)$ ]]
+}
+
+case "$action" in
+  list)
+    ps -ww -u "$uid" --no-headers -o pid= -o stat= -o comm= -o args=
+    ;;
+  stop)
+    owned_pid || { echo "process is not owned by the current user" >&2; exit 1; }
+    protected_name && { echo "session-critical process is protected" >&2; exit 1; }
+    kill -TERM -- "$pid"
+    ;;
+  restart)
+    owned_pid || { echo "process is not owned by the current user" >&2; exit 1; }
+    protected_name && { echo "session-critical process is protected" >&2; exit 1; }
+    mapfile -d '' -t argv < "/proc/$pid/cmdline"
+    [[ ${#argv[@]} -gt 0 ]] || { echo "process command cannot be reconstructed" >&2; exit 1; }
+    cwd=$(readlink -e "/proc/$pid/cwd")
+    kill -TERM -- "$pid"
+    for _ in {1..50}; do [[ ! -d /proc/$pid ]] && break; sleep 0.1; done
+    [[ ! -d /proc/$pid ]] || { echo "process did not stop after 5 seconds" >&2; exit 1; }
+    (cd "$cwd" && setsid -- "${argv[@]}" >/dev/null 2>&1 &)
+    ;;
+  *) echo "usage: process-control list|stop|restart [pid]" >&2; exit 2 ;;
+esac

@@ -121,7 +121,7 @@ CursorSurface {
       Layout.alignment: Qt.AlignVCenter
 
       Button {
-        visible: root.procState !== "running"
+        visible: false
         text: "Start"
         foreground: root.foreground
         fontFamily: root.fontFamily
@@ -138,7 +138,7 @@ CursorSurface {
         foreground: root.foreground
         fontFamily: root.fontFamily
         bordered: true
-        enabled: root.interactive
+        enabled: root.interactive && !root.service.protectedProcess
         onClicked: root.selectRequested()
       }
 
@@ -149,7 +149,7 @@ CursorSurface {
         foreground: root.foreground
         fontFamily: root.fontFamily
         bordered: true
-        enabled: root.interactive
+        enabled: root.interactive && !root.service.protectedProcess
         onClicked: root.restartRequested()
       }
 
@@ -161,7 +161,7 @@ CursorSurface {
         fontFamily: root.fontFamily
         hoverColor: Color.urgent
         bordered: true
-        enabled: root.interactive
+        enabled: root.interactive && !root.service.protectedProcess
         onClicked: root.stopRequested()
       }
     }

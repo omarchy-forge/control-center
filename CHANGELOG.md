@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Replace the mistaken per-project service model with a dashboard of all
+  processes owned by the current user, including graceful Stop and best-effort
+  Restart controls without sudo and protection for session-critical processes.
 - Reworked the bar icon and ready-state popout to match the confirmed visual
   design, including the supplied Forge mark, branded header, project card,
   paired actions, framed services, selected-row accent, cyan URLs, log console,

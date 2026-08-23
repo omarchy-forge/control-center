@@ -1,240 +1,65 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import "ServiceConfig.js" as ServiceConfig
 
-// Read-only project status: git branch and the validated service list from
-// <projectPath>/.omaforge/services.json. Owns no long-running processes —
-// that is ProcessPool's job. See FORGE_SPEC.md "Data and commands".
 Item {
   id: root
-
   property var settings: ({})
-  // Named `status`, not `state` — Item already declares a `state` property
-  // for QML's States system; shadowing it silently is a real bug, not style.
-  property string status: "loading" // loading | ready | empty | error
-  property string emptyReason: "" // no-project | no-config | invalid
-  property string configParseError: ""
-  property var configSkipped: []
+  property string status: "loading"
+  property string emptyReason: ""
   property string lastError: ""
   property string refreshWarning: ""
+  property var configSkipped: []
   property var services: []
-  property string branch: ""
-  property bool branchKnown: false
-  property bool projectMissing: false
-  property bool hasLoadedOnce: false
-  property bool branchTimedOut: false
-  property double lastRefreshMs: 0
-  property date updatedAt: new Date(0)
   property string demoState: ""
-
-  readonly property string projectPath: setting("projectPath", "")
-  readonly property string projectName: root.projectPath === "" ? "" : basenameOf(root.projectPath)
-  readonly property int refreshIntervalSec: boundedInteger("refreshIntervalSec", 60, 10, 3600)
+  property double lastRefreshMs: 0
   readonly property bool loading: status === "loading"
-  readonly property string configRelPath: ".omaforge/services.json"
-  readonly property string displayProjectName: demoState !== "" ? "demo-project" : projectName
-  readonly property string displayPath: demoState !== "" ? "~/code/demo-project" : projectPath
+  readonly property string displayProjectName: demoState !== "" ? "User processes" : "User processes"
+  readonly property string displayPath: (Quickshell.env("USER") || "current user") + " · " + services.length + " open"
+  readonly property string branch: "LIVE"
+  readonly property bool branchKnown: true
+  readonly property string helperPath: Qt.resolvedUrl("../scripts/process-control").toString().replace(/^file:\/\//, "")
+  readonly property int refreshIntervalSec: Math.max(5, Math.min(300, parseInt(settings.refreshIntervalSec || 10)))
 
-  function setting(name, fallback) {
-    var candidate = settings ? settings[name] : undefined
-    return candidate === undefined || candidate === null ? fallback : candidate
-  }
-
-  function boundedInteger(name, fallback, minimum, maximum) {
-    var candidate = parseInt(String(setting(name, fallback)), 10)
-    if (!isFinite(candidate)) candidate = fallback
-    return Math.max(minimum, Math.min(maximum, candidate))
-  }
-
-  function basenameOf(path) {
-    var trimmed = String(path || "").replace(/\/+$/, "")
-    var idx = trimmed.lastIndexOf("/")
-    return idx >= 0 ? trimmed.substr(idx + 1) : trimmed
-  }
-
-  function refreshIfStale() {
-    if (Date.now() - lastRefreshMs >= refreshIntervalSec * 1000) refresh()
-  }
-
-  function setDemoState(nextState) {
-    var candidate = String(nextState || "")
-    if (candidate !== "ready" && candidate !== "empty" && candidate !== "error") return "invalid"
-    demoState = candidate
-    demoTimer.restart()
-    return "ok"
-  }
-
+  function refreshIfStale() { if (Date.now() - lastRefreshMs >= refreshIntervalSec * 1000) refresh() }
   function refresh() {
-    if (demoState !== "") {
-      status = "loading"
-      demoTimer.restart()
-      return
-    }
-    if (root.projectPath === "") {
-      status = "empty"
-      emptyReason = "no-project"
-      services = []
-      lastRefreshMs = Date.now()
-      return
-    }
-    status = hasLoadedOnce ? status : "loading"
-    branchTimedOut = false
-    branchProcess.command = ["git", "-C", root.projectPath, "rev-parse", "--abbrev-ref", "HEAD"]
-    branchProcess.running = true
-    branchTimeout.restart()
-    configFile.reload()
+    if (demoState !== "") { demoTimer.restart(); return }
+    status = "loading"
+    listProcess.command = [helperPath, "list"]
+    listProcess.running = true
   }
-
-  function applyConfigText(text) {
-    configResult = ServiceConfig.parseConfig(text, root.projectPath)
-    recomputeState()
+  function control(action, pid) {
+    if (!/^\d+$/.test(String(pid))) return
+    controlProcess.command = [helperPath, action, String(pid)]
+    controlProcess.running = true
   }
-
-  property var configResult: ({ services: [], skipped: [], error: "" })
-
-  function recomputeState() {
-    if (demoState !== "") return
-    if (root.projectPath === "") {
-      status = "empty"
-      emptyReason = "no-project"
-      services = []
-      return
-    }
-    if (root.projectMissing) {
-      if (root.hasLoadedOnce) {
-        status = "ready"
-        refreshWarning = "Could not verify the git repository at " + root.projectPath + " (git failed or did not respond within 5s — check that git is installed and the path is a repository). Showing last known status."
-      } else {
-        status = "error"
-        lastError = "Could not open \"" + root.projectPath + "\" as a git repository. Check that git is installed and the project directory setting points at a git repository."
-      }
-      return
-    }
-    var result = root.configResult
-    configParseError = result.error
-    configSkipped = result.skipped
-    if (result.services.length === 0) {
-      status = "empty"
-      emptyReason = result.error !== "" ? "invalid" : "no-config"
-      services = []
-      hasLoadedOnce = true
-      return
-    }
-    services = result.services
-    status = "ready"
-    refreshWarning = ""
-    hasLoadedOnce = true
+  function setDemoState(next) {
+    if (next !== "ready" && next !== "empty" && next !== "error") return "invalid"
+    demoState = next; demoTimer.restart(); return "ok"
   }
-
-  function applyDemoState() {
-    lastRefreshMs = Date.now()
-    updatedAt = new Date()
-    if (demoState === "error") {
-      status = "error"
-      lastError = "Could not open \"~/code/demo-project\" as a git repository. (Fictional demo error.)"
-      services = []
-      branch = ""
-      branchKnown = false
-      return
+  function parse(text) {
+    var rows = String(text || "").split("\n"), out = []
+    for (var i = 0; i < rows.length; i++) {
+      var match = rows[i].match(/^\s*(\d+)\s+(\S+)\s+(\S+)\s*(.*)$/)
+      if (!match) continue
+      var protectedProcess = /^(quickshell|Hyprland|systemd|dbus-broker|uwsm|process-control)$/.test(match[3])
+      out.push({ id: match[1], pid: match[1], name: match[3], command: [match[4] || match[3]], cwd: "", url: "", demoStatus: "running", protectedProcess: protectedProcess, processState: match[2] })
     }
-    if (demoState === "empty") {
-      status = "empty"
-      emptyReason = "no-config"
-      services = []
-      branch = "main"
-      branchKnown = true
-      return
-    }
-    branch = "main"
-    branchKnown = true
+    services = out; status = out.length ? "ready" : "empty"; emptyReason = "no-processes"; lastRefreshMs = Date.now()
+  }
+  function applyDemo() {
+    if (demoState === "error") { status = "error"; lastError = "Could not read the current user's process table. (Fictional demo error.)"; services = []; return }
+    if (demoState === "empty") { status = "empty"; services = []; return }
     services = [
-      { id: "web", name: "Web", command: ["pnpm", "dev"], cwd: "~/code/demo-project", url: "http://localhost:3000", demoStatus: "running" },
-      { id: "api", name: "API", command: ["uv", "run", "fastapi", "dev"], cwd: "~/code/demo-project/api", url: "http://localhost:8000", demoStatus: "running" },
-      { id: "worker", name: "Worker", command: ["pnpm", "worker"], cwd: "~/code/demo-project", url: "", demoStatus: "stopped" }
-    ]
-    status = "ready"
-    refreshWarning = ""
+      {id:"4210",pid:"4210",name:"node",command:["node server.js"],url:"",demoStatus:"running",protectedProcess:false,processState:"Sl"},
+      {id:"4388",pid:"4388",name:"python",command:["python worker.py"],url:"",demoStatus:"running",protectedProcess:false,processState:"S"},
+      {id:"328014",pid:"328014",name:"quickshell",command:["quickshell shell session"],url:"",demoStatus:"running",protectedProcess:true,processState:"Sl"}
+    ]; status = "ready"
   }
+  function demoLogsFor(id) { var s = services.find(function(x){return x.id===id}); return s ? [{text:"PID " + s.pid + " · state " + s.processState,stream:"out"},{text:s.command[0],stream:"out"}] : [] }
 
-  readonly property var demoLogs: ({
-    "web": ["$ pnpm dev", "  VITE  ready in 312 ms", "  ➜  Local:   http://localhost:3000/"],
-    "api": ["$ uv run fastapi dev", "INFO  Server started", "INFO  Listening on 0.0.0.0:8000", "GET   /health  200"],
-    "worker": []
-  })
-
-  function demoLogsFor(id) {
-    var lines = demoLogs[id] || []
-    var out = []
-    for (var i = 0; i < lines.length; i++) out.push({ text: lines[i], stream: "out" })
-    return out
-  }
-
-  Timer {
-    id: refreshTimer
-    interval: root.refreshIntervalSec * 1000
-    repeat: true
-    running: true
-    triggeredOnStart: true
-    onTriggered: root.refresh()
-  }
-
-  Timer {
-    id: demoTimer
-    interval: 250
-    onTriggered: root.applyDemoState()
-  }
-
-  // Safety net for both a hung git process and a missing `git` executable:
-  // Quickshell's Process type exposes no "failed to start" signal to QML
-  // (only `exited`, which never fires if the program can't launch at all),
-  // so an unresponsive/absent git falls back to this bounded timeout rather
-  // than hanging indefinitely. See FORGE_SPEC.md "Safe behavior when
-  // dependencies are missing".
-  Timer {
-    id: branchTimeout
-    interval: 5000
-    onTriggered: if (branchProcess.running) {
-      root.branchTimedOut = true
-      branchProcess.running = false
-      root.branch = ""
-      root.branchKnown = false
-      root.projectMissing = true
-      root.lastRefreshMs = Date.now()
-      root.recomputeState()
-    }
-  }
-
-  Process {
-    id: branchProcess
-    running: false
-    command: []
-    stdout: StdioCollector { id: branchOut; waitForEnd: true }
-    stderr: StdioCollector { id: branchErr; waitForEnd: true }
-    onExited: function(exitCode) {
-      branchTimeout.stop()
-      if (root.branchTimedOut) return
-      if (exitCode === 0) {
-        root.branch = String(branchOut.text || "").trim()
-        root.branchKnown = true
-        root.projectMissing = false
-      } else {
-        root.branch = ""
-        root.branchKnown = false
-        root.projectMissing = true
-      }
-      root.lastRefreshMs = Date.now()
-      root.recomputeState()
-    }
-  }
-
-  FileView {
-    id: configFile
-    path: root.projectPath !== "" ? root.projectPath + "/.omaforge/services.json" : ""
-    watchChanges: true
-    printErrors: false
-    onFileChanged: reload()
-    onLoaded: root.applyConfigText(text())
-    onLoadFailed: root.applyConfigText("")
-  }
+  Timer { interval: root.refreshIntervalSec*1000; repeat: true; running: true; triggeredOnStart: true; onTriggered: root.refresh() }
+  Timer { id: demoTimer; interval: 100; onTriggered: root.applyDemo() }
+  Process { id: listProcess; running:false; command:[]; stdout: StdioCollector{id:listOut;waitForEnd:true}; stderr:StdioCollector{waitForEnd:true}; onExited:function(code){ if(code===0) root.parse(listOut.text); else {root.status="error";root.lastError="Could not read the current user's process table."} } }
+  Process { id: controlProcess; running:false; command:[]; stdout:StdioCollector{waitForEnd:true}; stderr:StdioCollector{id:controlErr;waitForEnd:true}; onExited:function(code){ root.refreshWarning=code===0?"":String(controlErr.text||"Process action failed.").trim(); root.refresh() } }
 }
