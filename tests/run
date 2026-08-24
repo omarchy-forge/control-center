@@ -7,6 +7,14 @@ jq -e . "$repo_root/manifest.json" >/dev/null
 bash -n "$repo_root/demo/run"
 bash -n "$repo_root/tests/runtime"
 
+expected_plugin_name="$(basename "$repo_root")"
+manifest_name="$(jq -r '.name' "$repo_root/manifest.json")"
+display_name="$(jq -r '.barWidget.displayName' "$repo_root/manifest.json")"
+if [[ "$manifest_name" != "$expected_plugin_name" || "$display_name" != "$expected_plugin_name" ]]; then
+  echo "manifest plugin names must match repository directory: $expected_plugin_name" >&2
+  exit 1
+fi
+
 for required in \
   'references/omaforge-final-logo-300-app-icon.png' \
   'text: "Process Center"' \

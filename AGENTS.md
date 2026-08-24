@@ -1,4 +1,4 @@
-# Agent instructions for Omaforge Local Control Center
+# Agent instructions for omaforge-control-center
 
 Build the plugin described in `FORGE_SPEC.md` while preserving the generated
 Forge and Omarchy safety contracts. Stop and ask the user unless its
@@ -18,7 +18,7 @@ or requires behavior outside the generated bar-widget template.
 
 ## Safety boundaries
 
-- Do not install, enable, remove, or publish the plugin.
+- Do not install, enable, remove, or publish the plugin unless the user explicitly authorizes that exact action in the current request.
 - Do not restart or reconfigure the live Omarchy Shell.
 - Do not run `omaforge dev`, `omaforge screenshot`, `demo/run`,
   `tests/runtime`, or any other command that executes plugin QML.
@@ -45,6 +45,13 @@ or requires behavior outside the generated bar-widget template.
 - Add or update deterministic tests for every behavior change.
 - Keep changes focused on the completed specification; do not add speculative
   features.
+
+## GitHub workflow
+
+  When explicitly requested, the agent may create branches, stage and commit
+  changes, push branches, open pull requests, monitor CI, and merge approved pull
+  requests. Publishing remains prohibited unless separately and explicitly
+  authorized by the user.
 
 ## Allowed verification
 
