@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.1.2 - 2026-08-24
+
+- Add a consistent Omaforge brand label above the Process Center title while
+  preserving the established plugin identity and product name.
+
 ## 0.1.1 - 2026-08-24
 
 - Standardize the manifest and registry-facing plugin name as

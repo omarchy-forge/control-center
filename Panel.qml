@@ -262,13 +262,27 @@ Panel {
             mipmap: true
           }
 
-          Text {
-            text: "Process Center"
-            color: root.foreground
-            font.family: root.fontFamily
-            font.pixelSize: Style.font.title
-            font.bold: true
+          ColumnLayout {
             Layout.fillWidth: true
+
+            spacing: 0
+
+            Text {
+              text: "OMAFORGE"
+              color: root.brandOrange
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.caption
+              font.bold: true
+              font.letterSpacing: Style.space(1)
+            }
+
+            Text {
+              text: "Process Center"
+              color: root.foreground
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.title
+              font.bold: true
+            }
           }
 
           Text {
