@@ -249,22 +249,26 @@ Panel {
         width: panelFlick.width
         spacing: Style.space(12)
 
-        RowLayout {
+        Item {
           width: parent.width
-          spacing: Style.space(12)
+          implicitHeight: Style.space(42)
 
           Image {
+            id: headerLogo
             source: root.brandIcon
-            Layout.preferredWidth: Style.space(42)
-            Layout.preferredHeight: Style.space(42)
+            width: Style.space(42)
+            height: Style.space(42)
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
             fillMode: Image.PreserveAspectFit
             smooth: true
             mipmap: true
           }
 
-          ColumnLayout {
-            Layout.fillWidth: true
-
+          Column {
+            anchors.left: headerLogo.right
+            anchors.leftMargin: Style.space(4)
+            anchors.verticalCenter: parent.verticalCenter
             spacing: 0
 
             Text {
@@ -286,7 +290,11 @@ Panel {
           }
 
           Text {
+            id: processCount
             visible: projectService.status === "ready"
+            anchors.right: closeButton.left
+            anchors.rightMargin: Style.space(12)
+            anchors.verticalCenter: parent.verticalCenter
             text: root.services.length + "/" + root.allServices.length + " shown  ●"
             color: root.foreground
             font.family: root.fontFamily
@@ -294,6 +302,9 @@ Panel {
           }
 
           Text {
+            id: closeButton
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
             text: "×"
             color: root.foreground
             font.family: root.fontFamily
