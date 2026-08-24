@@ -194,7 +194,7 @@ Panel {
       }
     }
     active: root.opened
-    tooltipText: projectService.loading
+    tooltipText: projectService.refreshing
       ? "Refreshing Omaforge Local Control Center"
       : projectService.status === "error"
         ? "Omaforge Local Control Center — needs attention"

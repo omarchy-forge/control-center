@@ -15,7 +15,9 @@ The compact popout header is **Process Center**; the full plugin identity remain
 - Filters the list by All, Apps, System, Servers, or Ports. Ports uses read-only
   `ss` socket metadata to identify user-owned listening processes and does not
   open a connection.
-- Refreshes every 10 seconds by default, configurable from 5–300 seconds.
+- Refreshes every 10 seconds by default, configurable from 5–300 seconds. A
+  background refresh keeps the last successful snapshot visible; if it fails,
+  the dashboard reports a warning without discarding that safe snapshot.
 - Sends `SIGTERM` for Stop; it never escalates to `SIGKILL` automatically.
 - Restart snapshots `/proc/<pid>/cmdline` and `/proc/<pid>/cwd`, sends
   `SIGTERM`, waits up to five seconds, then relaunches the original argument

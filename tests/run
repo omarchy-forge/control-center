@@ -23,6 +23,16 @@ for filter in 'label: "All"' 'label: "Apps"' 'label: "System"' 'label: "Servers"
   grep -Fq "$filter" "$repo_root/Panel.qml" || { echo "missing process filter: $filter" >&2; exit 1; }
 done
 
+for refresh_contract in \
+  'if (!hasSnapshot) status = "loading"' \
+  'if (listProcess.running) return' \
+  'showing the last successful snapshot'; do
+  grep -Fq "$refresh_contract" "$repo_root/services/ProjectService.qml" || {
+    echo "ProjectService.qml is missing non-flickering refresh contract: $refresh_contract" >&2
+    exit 1
+  }
+done
+
 if command -v qmllint >/dev/null 2>&1; then
   lint_output=$(qmllint "$repo_root/Panel.qml" 2>&1 || true)
 elif [[ -x /usr/lib/qt6/bin/qmllint ]]; then

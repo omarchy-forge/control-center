@@ -8,12 +8,16 @@ Item {
   property string status: "loading"
   property string emptyReason: ""
   property string lastError: ""
-  property string refreshWarning: ""
+  property string actionWarning: ""
+  property string discoveryWarning: ""
   property var configSkipped: []
   property var services: []
   property string demoState: ""
   property double lastRefreshMs: 0
+  property bool hasSnapshot: false
+  property bool refreshing: false
   readonly property bool loading: status === "loading"
+  readonly property string refreshWarning: actionWarning !== "" ? actionWarning : discoveryWarning
   readonly property string displayProjectName: demoState !== "" ? "User processes" : "User processes"
   readonly property string displayPath: (Quickshell.env("USER") || "current user") + " · " + services.length + " open"
   readonly property string branch: "LIVE"
@@ -24,7 +28,9 @@ Item {
   function refreshIfStale() { if (Date.now() - lastRefreshMs >= refreshIntervalSec * 1000) refresh() }
   function refresh() {
     if (demoState !== "") { demoTimer.restart(); return }
-    status = "loading"
+    if (listProcess.running) return
+    if (!hasSnapshot) status = "loading"
+    refreshing = true
     listProcess.command = [helperPath, "list"]
     listProcess.running = true
   }
@@ -54,7 +60,13 @@ Item {
       var system = protectedProcess || /d$/.test(match[3]) || /^(pipewire|wireplumber|xdg-|gpg-agent|ssh-agent)/.test(match[3])
       out.push({ id: match[1], pid: match[1], name: match[3], command: [commandText], cwd: "", url: "", demoStatus: "running", protectedProcess: protectedProcess, processState: match[2], listening: listening, server: server, systemProcess: system })
     }
-    services = out; status = out.length ? "ready" : "empty"; emptyReason = "no-processes"; lastRefreshMs = Date.now()
+    services = out
+    status = out.length ? "ready" : "empty"
+    emptyReason = "no-processes"
+    lastError = ""
+    discoveryWarning = ""
+    hasSnapshot = true
+    lastRefreshMs = Date.now()
   }
   function applyDemo() {
     if (demoState === "error") { status = "error"; lastError = "Could not read the current user's process table. (Fictional demo error.)"; services = []; return }
@@ -76,8 +88,11 @@ Item {
     stdout: StdioCollector { id: listOut; waitForEnd: true }
     stderr: StdioCollector { waitForEnd: true }
     onExited: function(code) {
+      root.refreshing = false
       if (code === 0) {
         root.parse(listOut.text)
+      } else if (root.hasSnapshot) {
+        root.discoveryWarning = "Could not refresh the current user's process table; showing the last successful snapshot."
       } else {
         root.status = "error"
         root.lastError = "Could not read the current user's process table."
@@ -92,7 +107,7 @@ Item {
     stdout: StdioCollector { waitForEnd: true }
     stderr: StdioCollector { id: controlErr; waitForEnd: true }
     onExited: function(code) {
-      root.refreshWarning = code === 0 ? "" : String(controlErr.text || "Process action failed.").trim()
+      root.actionWarning = code === 0 ? "" : String(controlErr.text || "Process action failed.").trim()
       root.refresh()
     }
   }
