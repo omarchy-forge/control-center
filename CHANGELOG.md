@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.1.1 - 2026-08-24
+
 - Standardize the manifest and registry-facing plugin name as
   `omaforge-control-center`, matching the repository directory while preserving
   the stable `omaforge.control.center` plugin ID and Process Center panel title.
