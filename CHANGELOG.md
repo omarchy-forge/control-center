@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.1.3 - 2026-08-24
+
+- Fix excessive horizontal space between the Omaforge logo and Process Center
+  title by replacing the automatic header layout with explicit anchored
+  geometry and a four-unit title margin.
+
 ## 0.1.2 - 2026-08-24
 
 - Add a consistent Omaforge brand label above the Process Center title while

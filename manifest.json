@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "omaforge.control.center",
   "name": "omaforge-control-center",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "author": "eddieor",
   "license": "MIT",
   "description": "Monitor, stop, and restart processes owned by the current user.",

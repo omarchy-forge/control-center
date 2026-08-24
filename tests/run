@@ -28,6 +28,18 @@ for required in \
   }
 done
 
+for header_contract in \
+  'id: headerLogo' \
+  'anchors.left: headerLogo.right' \
+  'anchors.leftMargin: Style.space(4)' \
+  'anchors.right: closeButton.left' \
+  'anchors.right: parent.right'; do
+  grep -Fq "$header_contract" "$repo_root/Panel.qml" || {
+    echo "Panel.qml is missing explicit header geometry: $header_contract" >&2
+    exit 1
+  }
+done
+
 for filter in 'label: "All"' 'label: "Apps"' 'label: "System"' 'label: "Servers"' 'label: "Ports"'; do
   grep -Fq "$filter" "$repo_root/Panel.qml" || { echo "missing process filter: $filter" >&2; exit 1; }
 done
