@@ -17,6 +17,7 @@ fi
 
 for required in \
   'references/omaforge-final-logo-300-app-icon.png' \
+  'text: "OMAFORGE"' \
   'text: "Process Center"' \
   'text: "PROCESSES"' \
   'brandOrange' \
