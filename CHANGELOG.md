@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Standardize the manifest and registry-facing plugin name as
+  `omaforge-control-center`, matching the repository directory while preserving
+  the stable `omaforge.control.center` plugin ID and Process Center panel title.
 - Add a deterministic plugin-only Process Center preview to the repository and
   README without capturing desktop or real process data.
 - Rename the popout header from Forge Run to Process Center so its purpose is

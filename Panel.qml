@@ -195,12 +195,12 @@ Panel {
     }
     active: root.opened
     tooltipText: projectService.refreshing
-      ? "Refreshing Omaforge Local Control Center"
+      ? "Refreshing omaforge-control-center"
       : projectService.status === "error"
-        ? "Omaforge Local Control Center — needs attention"
+        ? "omaforge-control-center — needs attention"
         : projectService.status === "ready"
-          ? "Omaforge Local Control Center — " + root.runningCount() + " running"
-          : "Omaforge Local Control Center"
+          ? "omaforge-control-center — " + root.runningCount() + " running"
+          : "omaforge-control-center"
     onPressed: function(buttonCode) {
       if (buttonCode === Qt.RightButton || buttonCode === Qt.MiddleButton) root.refresh()
       else root.toggle()

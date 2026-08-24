@@ -1,4 +1,4 @@
-# Forge specification: Omaforge Local Control Center
+# Forge specification: omaforge-control-center
 
 Specification status: Ready for implementation
 

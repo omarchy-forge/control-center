@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "omaforge.control.center",
-  "name": "Omaforge Local Control Center",
+  "name": "omaforge-control-center",
   "version": "0.1.0",
   "author": "eddieor",
   "license": "MIT",
@@ -11,7 +11,7 @@
     "barWidget": "Panel.qml"
   },
   "barWidget": {
-    "displayName": "Omaforge Local Control Center",
+    "displayName": "omaforge-control-center",
     "description": "Monitor, gracefully stop, and best-effort restart processes owned by the current user without sudo.",
     "category": "Development",
     "allowMultiple": false,
