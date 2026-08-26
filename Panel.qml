@@ -223,40 +223,47 @@ Panel {
     contentWidth: popout.fittedContentWidth(Style.space(500))
     contentHeight: popout.fittedContentHeight(content.implicitHeight, Style.space(720))
 
-    Shortcut {
-      sequence: "J"
-      context: Qt.ApplicationShortcut
-      enabled: root.opened
-      autoRepeat: true
-      onActivated: root.handleNavigationShortcut(0, 1)
-    }
-    Shortcut {
-      sequence: "K"
-      context: Qt.ApplicationShortcut
-      enabled: root.opened
-      autoRepeat: true
-      onActivated: root.handleNavigationShortcut(0, -1)
-    }
-    Shortcut {
-      sequence: "H"
-      context: Qt.ApplicationShortcut
-      enabled: root.opened
-      autoRepeat: false
-      onActivated: root.handleNavigationShortcut(-1, 0)
-    }
-    Shortcut {
-      sequence: "L"
-      context: Qt.ApplicationShortcut
-      enabled: root.opened
-      autoRepeat: false
-      onActivated: root.handleNavigationShortcut(1, 0)
-    }
-    Shortcut {
-      sequence: "X"
-      context: Qt.ApplicationShortcut
-      enabled: root.opened
-      autoRepeat: false
-      onActivated: root.handleStopShortcut()
+    Item {
+      // KeyboardPanel's content alias accepts visual items only; this
+      // zero-size item owns the non-visual Shortcut objects.
+      width: 0
+      height: 0
+
+      Shortcut {
+        sequence: "J"
+        context: Qt.ApplicationShortcut
+        enabled: root.opened
+        autoRepeat: true
+        onActivated: root.handleNavigationShortcut(0, 1)
+      }
+      Shortcut {
+        sequence: "K"
+        context: Qt.ApplicationShortcut
+        enabled: root.opened
+        autoRepeat: true
+        onActivated: root.handleNavigationShortcut(0, -1)
+      }
+      Shortcut {
+        sequence: "H"
+        context: Qt.ApplicationShortcut
+        enabled: root.opened
+        autoRepeat: false
+        onActivated: root.handleNavigationShortcut(-1, 0)
+      }
+      Shortcut {
+        sequence: "L"
+        context: Qt.ApplicationShortcut
+        enabled: root.opened
+        autoRepeat: false
+        onActivated: root.handleNavigationShortcut(1, 0)
+      }
+      Shortcut {
+        sequence: "X"
+        context: Qt.ApplicationShortcut
+        enabled: root.opened
+        autoRepeat: false
+        onActivated: root.handleStopShortcut()
+      }
     }
 
     PanelKeyCatcher {
