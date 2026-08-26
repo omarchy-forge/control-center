@@ -44,6 +44,21 @@ for filter in 'label: "All"' 'label: "Apps"' 'label: "System"' 'label: "Servers"
   grep -Fq "$filter" "$repo_root/Panel.qml" || { echo "missing process filter: $filter" >&2; exit 1; }
 done
 
+for keyboard_contract in \
+  'sequence: "J"' \
+  'sequence: "K"' \
+  'sequence: "H"' \
+  'sequence: "L"' \
+  'sequence: "X"' \
+  'context: Qt.ApplicationShortcut' \
+  'enabled: root.opened' \
+  'onActivated: root.handleStopShortcut()'; do
+  grep -Fq "$keyboard_contract" "$repo_root/Panel.qml" || {
+    echo "Panel.qml is missing keyboard shortcut contract: $keyboard_contract" >&2
+    exit 1
+  }
+done
+
 for refresh_contract in \
   'if (!hasSnapshot) status = "loading"' \
   'if (listProcess.running) return' \

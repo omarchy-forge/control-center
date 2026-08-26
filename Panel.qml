@@ -138,6 +138,12 @@ Panel {
   function runAllServices() { root.refresh() }
   function stopAllServices() { root.stopSelected() }
 
+  // Keep the advertised single-key controls working even when a child item
+  // temporarily owns active focus. KeyboardPanel confines these application
+  // shortcuts to the period while this popout is open.
+  function handleNavigationShortcut(dx, dy) { root.moveCursor(dx, dy) }
+  function handleStopShortcut() { root.stopSelected() }
+
   function emptyMessage() {
     return "No user-owned processes are currently visible."
   }
@@ -216,6 +222,49 @@ Panel {
     focusTarget: keyCatcher
     contentWidth: popout.fittedContentWidth(Style.space(500))
     contentHeight: popout.fittedContentHeight(content.implicitHeight, Style.space(720))
+
+    Item {
+      // KeyboardPanel's content alias accepts visual items only; this
+      // zero-size item owns the non-visual Shortcut objects.
+      width: 0
+      height: 0
+
+      Shortcut {
+        sequence: "J"
+        context: Qt.ApplicationShortcut
+        enabled: root.opened
+        autoRepeat: true
+        onActivated: root.handleNavigationShortcut(0, 1)
+      }
+      Shortcut {
+        sequence: "K"
+        context: Qt.ApplicationShortcut
+        enabled: root.opened
+        autoRepeat: true
+        onActivated: root.handleNavigationShortcut(0, -1)
+      }
+      Shortcut {
+        sequence: "H"
+        context: Qt.ApplicationShortcut
+        enabled: root.opened
+        autoRepeat: false
+        onActivated: root.handleNavigationShortcut(-1, 0)
+      }
+      Shortcut {
+        sequence: "L"
+        context: Qt.ApplicationShortcut
+        enabled: root.opened
+        autoRepeat: false
+        onActivated: root.handleNavigationShortcut(1, 0)
+      }
+      Shortcut {
+        sequence: "X"
+        context: Qt.ApplicationShortcut
+        enabled: root.opened
+        autoRepeat: false
+        onActivated: root.handleStopShortcut()
+      }
+    }
 
     PanelKeyCatcher {
       id: keyCatcher

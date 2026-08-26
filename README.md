@@ -45,6 +45,13 @@ Omarchy 4 with manifest schema 1, plus standard Linux `ps`, `id`, `stat`,
 The only setting is the refresh interval (5–300 seconds, default 10). No project
 directory or service configuration file is required.
 
+## Keyboard controls
+
+While the popout is open, `j`/`k` select the next or previous process,
+`h`/`l` move focus between the process list and detail panel, `x` gracefully
+stops the selected eligible process, and Escape closes the popout. The stop
+shortcut is disabled for protected processes and deterministic demo states.
+
 ## Privacy
 
 Process metadata stays local. The plugin reads the current user's process table
