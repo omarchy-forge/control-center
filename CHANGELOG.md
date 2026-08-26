@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 0.1.4 - 2026-08-26
+
+- Make the advertised `j`/`k` process navigation, `h`/`l` pane focus, and
+  `x` graceful-stop shortcuts reliable when child controls temporarily own
+  keyboard focus.
+- Prevent key repeat from issuing duplicate stop requests, while preserving
+  protected-process and deterministic demo-state safeguards.
+- Add static regression coverage and user-facing documentation for the
+  keyboard shortcut contract.
+
 ## 0.1.3 - 2026-08-24
 
 - Fix excessive horizontal space between the Omaforge logo and Process Center
